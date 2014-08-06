@@ -6,6 +6,7 @@ class Bootstrap{
         $url = rtrim($url, '/'); //remove slashes
         $url = explode('/', $url);// explode by slashes
 
+
         $controlerDir = 'controllers/'; //root folder for dir
 
 
@@ -50,6 +51,7 @@ class Bootstrap{
 
         $controller = new $url[0]; //instantiate the class
 
+
         if(isset($url[1])){ //check if the controller has argument
             $numArg = $this->reflection($controller, $url[0]);
             if($numArg>0){
@@ -86,10 +88,10 @@ class Bootstrap{
             }
         }
     }
-
     private function reflection($controller, $method){
         //count all parameters inside the method then insert to array
         $refl = new ReflectionMethod($controller, $method);
         return $refl->getNumberOfParameters();
+
     }
 }
