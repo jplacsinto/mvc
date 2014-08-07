@@ -3,6 +3,7 @@ class Bootstrap{
     function __construct(){
 
         $url = isset($_GET['url'])?$_GET['url']:null; //get the url
+        $url = filter_var($url, FILTER_SANITIZE_URL);
         $url = rtrim($url, '/'); //remove slashes
         $url = explode('/', $url);// explode by slashes
 
@@ -49,42 +50,34 @@ class Bootstrap{
         }
 
 
+        //print_r($url);
         $controller = new $url[0]; //instantiate the class
-
+        //load model if exist
+        $controller->loadMOdel($url[0].'_model');
 
         if(isset($url[1])){ //check if the controller has argument
-            $numArg = $this->reflection($controller, $url[0]);
-            if($numArg>0){
-                $dataParams = array();
-                for($x=1; $x<=$numArg; $x++){
-                    $dataParams[] = (!empty($url[$x]))?$url[$x]:null;
-                }
-                //call the method and assign array as param
-                call_user_func_array([$controller, $url[0]], $dataParams);
-            }else{
-                if(method_exists($controller, $url[1])){
-                    $numArg = $this->reflection($controller, $url[1]);
-                    if($numArg>0){
-                        $dataParams = array();
-                        for($x=1; $x<=$numArg; $x++){
-                            $dataParams[] = (!empty($url[$x+1]))?$url[$x+1]:null;
-                        }
-                        //call the method and assign array as param
-                        call_user_func_array([$controller, $url[1]], $dataParams);
-                    }else{
-                        $controller->$url[1]();
+            if(method_exists($controller, $url[1])){
+                $numArg = $this->reflection($controller, $url[1]);
+                if($numArg>0){
+                    $dataParams = array();
+                    for($x=1; $x<=$numArg; $x++){
+                        $dataParams[] = (!empty($url[$x+1]))?$url[$x+1]:null;
                     }
+                    //call the method and assign array as param
+                    call_user_func_array([$controller, $url[1]], $dataParams);
                 }else{
-                    //load error message
-                    require "controllers/error.php";
-                    $controller = new Error();
-                    $controller->index();
-                    return false;
+                    $controller->$url[1]();
                 }
+            }else{
+                //load error message
+                require "controllers/error.php";
+                $controller = new Error();
+                $controller->index();
+                return false;
             }
         }else{
-            if(method_exists($controller, $url[0])){
-                $controller->$url[0](); // call the controller
+            if(method_exists($controller, 'index')){
+                $controller->index(); // call the controller
             }
         }
     }
@@ -92,6 +85,5 @@ class Bootstrap{
         //count all parameters inside the method then insert to array
         $refl = new ReflectionMethod($controller, $method);
         return $refl->getNumberOfParameters();
-
     }
 }
